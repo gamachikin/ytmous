@@ -1,29 +1,7 @@
 "use strict";
-const cluster = require("cluster");
-const os = require("os");
-
-if (!process.env.NO_CLUSTERS && cluster.isPrimary) {
-  const numClusters = process.env.CLUSTERS || (os.availableParallelism ? os.availableParallelism() : (os.cpus().length || 2))
-
-  console.log(`Primary ${process.pid} is running. Will fork ${numClusters} clusters.`);
-
-  // Fork workers.
-  for (let i = 0; i < numClusters; i++) {
-    cluster.fork();
-  }
-
-  cluster.on('exit', (worker, code, signal) => {
-    console.log(`Worker ${worker.process.pid} died. Forking another one....`);
-    cluster.fork();
-  });
-
-  return true;
-}
-
 const express = require("express");
 const compression = require("compression");
 const YouTubeJS = require("youtubei.js");
-
 const proxyHandler = require("./etc/proxy");
 const util = require("./etc/util");
 
@@ -32,7 +10,6 @@ let client;
 
 app.use(compression());
 
-// https://github.com/ytmous/ytmous/pull/25
 app.use(function (req, res, next) {
   res.setHeader('X-Frame-Options', "SAMEORIGIN");
   res.setHeader('X-Content-Type-Options', "nosniff");
@@ -143,7 +120,6 @@ async function initInnerTube() {
   };
 };
 
-// Handle any unhandled promise rejection.
 process.on("unhandledRejection", console.error);
 
 initInnerTube();
